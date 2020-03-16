@@ -12,7 +12,7 @@ import-stylebooks:
 parameters: 
   -
     name: acl-prefix
-    label: ACL Prefix Name
+    label: Prefix Name for ACL
     type: string
     required: true
   - 
