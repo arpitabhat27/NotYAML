@@ -1,0 +1,56 @@
+---
+name: ns-rewrite
+namespace: com.citrix.adc.stylebooks
+version: "1.0"
+display-name: "StyleBook for creating rewrite policy"
+description: "StyleBook for creating rewrite policy"
+schema-version: "1.0"
+import-stylebooks: 
+  - 
+    namespace: netscaler.nitro.config
+    prefix: ns
+    version: "10.5"
+
+parameters:
+  -
+    name: actionname
+    label: "Rewrite Action Name"
+    description: "String to identify the rewrite action"
+    type: string
+    
+  -
+    name: target_header
+    label: "Target header to rewrite"
+    description: "Target header to rewrite"
+    type: string
+    default: client.tcp.payload(1000)
+    
+  -
+    name: search_string
+    label: "search string"
+    description: "Search facility that is used to match multiple strings in the request or response"
+    type: string
+    default: "text(\"old-string\")"
+
+components: 
+  -
+    name: nsfeatures-comp
+    type: ns::nsfeature
+    meta-properties:
+      action: enable
+    properties:
+      feature:
+        - REWRITE
+        
+  -
+    name: nsrewrite-action
+    type: ns::rewriteaction
+    properties:
+     name: $parameters.actionname
+     type: REPLACE_ALL
+     target: $parameters.target_header
+     stringbuilderexpr: "\"new-string\""
+     search: $parameters.search_string
+     
+  
+     

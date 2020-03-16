@@ -1,0 +1,80 @@
+--- 
+name: sslprofile-test
+namespace: com.citrix.mas.stylebooks
+version: "1.4"
+display-name: "SSLProfile Test StyleBook"
+schema-version: "1.0"
+import-stylebooks:
+ -
+  namespace: netscaler.nitro.config
+  prefix: ns
+  version: "12.0"
+parameters:
+ -
+  name: ns-sslvpn-rdp-vsvr-name
+  type: string
+  label: "RDPProxy vServer name"
+  description: "vServer name for RDPProxy SSLVPN configuration"
+  key: true
+  required: true
+  default: "RDP-test_https_443"
+ -
+  name: ns-sslvpn-rdp-vsvr-ip
+  type: ipaddress
+  label: "RDPProxy vServer IP-address"
+  description: "vServer IP-address for RDPProxy SSLVPN configuration"
+  required: true
+  default: "192.168.10.89"
+
+components:
+ -
+  name: ns-features
+  type: ns::nsfeature
+  meta-properties:
+   action: enable
+  properties:
+   feature: ["SSL", "SSLVPN", "AAA", "RDPProxy", "LB"]
+
+ -
+  name: ns-vpn-vserver
+  type: ns::vpnvserver
+  properties:
+   name: str("nsg_vs_") + $parameters.ns-sslvpn-rdp-vsvr-name
+   servicetype: "SSL"
+   ipv46: ip($parameters.ns-sslvpn-rdp-vsvr-ip)
+   port: 443
+   downstateflush: "DISABLED"
+   listenpolicy: "NONE"
+ -
+  name: ns-sslprofile-frontend
+  type: ns::sslprofile
+  properties:
+    name: "ssl_prof_frontend_201710"
+    sslprofiletype: "FrontEnd"
+    ersa: "DISABLED"
+    sessreuse: "ENABLED"
+    sesstimeout: 120
+    denysslreneg: "NONSECURE"
+ -
+  name: ns-sslvserver-sslpolicy-binding
+  type: ns::sslvserver
+  properties:
+   vservername: $components.ns-vpn-vserver.properties.name
+   sslprofile: $components.ns-sslprofile-frontend.properties.name
+ -
+  name: ns-ldap-svr-details
+  type: object
+  properties:
+    ns-ldap-auth-svr-name: "ldap-s_RDP-test"
+    ldap-base: str("DC=demo,DC=lab")
+
+ -
+  name: ns-vpn-vserver2
+  type: ns::vpnvserver
+  properties:
+   name: str("nsg_vs_2_") + $parameters.ns-sslvpn-rdp-vsvr-name
+   servicetype: "SSL"
+   ipv46: ip($parameters.ns-sslvpn-rdp-vsvr-ip)
+   port: 443
+   downstateflush: "DISABLED"
+   listenpolicy: "NONE"
