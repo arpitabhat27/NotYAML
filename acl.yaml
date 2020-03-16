@@ -1,0 +1,67 @@
+name: nsacl-stylebook
+namespace: com.example.stylebook
+version: "2.0"
+display-name: Example StyleBook for creating nsacl
+description: Example StyleBook for creating nsacl
+schema-version: "1.0"
+import-stylebooks: 
+  - 
+    namespace: netscaler.nitro.config
+    version: "10.5"
+    prefix: ns
+parameters: 
+  -
+    name: acl-prefix
+    label: ACL Prefix Name
+    type: string
+    required: true
+  - 
+    name: acl-params
+    label: ACLs Source and Destination IPs/Ports
+    type: object
+    required: true
+    parameters: 
+      - 
+        name: src-ips
+        label: Source IPs or IP ranges
+        type: string[]
+        required: true
+      - 
+        name: dest-ips
+        label: Destination IPs or IP ranges
+        type: string[]
+        required: true
+      - 
+        name: dest-ports
+        label: Destination Port List
+        type: tcp-port[]
+        required: true
+substitutions:
+  index(x, y, z): $z + $y * len($parameters.acl-params.dest-ports) + $x * len($parameters.acl-params.dest-ips) * len($parameters.acl-params.dest-ports)
+components:
+  -
+    name: nsacl-comp
+    type: ns::nsacl
+    repeat: 
+      repeat-list: $parameters.acl-params.src-ips
+      repeat-item: src-ip
+      repeat-index: src-idx
+      repeat: 
+        repeat-list: $parameters.acl-params.dest-ips
+        repeat-item: dest-ip
+        repeat-index: dest-idx
+        repeat: 
+          repeat-list: $parameters.acl-params.dest-ports
+          repeat-item: dest-port
+          repeat-index: destp-idx
+    properties: 
+      aclname: $parameters.acl-prefix + "-" + str($substitutions.index($src-idx, $dest-idx, $destp-idx))
+      aclaction: ALLOW
+      protocol: tcp
+      destport: true
+      destportval: str($dest-port)
+      srcip: true
+      srcipval: str($src-ip)
+      destip: true
+      destipval: str($dest-ip)
+      
